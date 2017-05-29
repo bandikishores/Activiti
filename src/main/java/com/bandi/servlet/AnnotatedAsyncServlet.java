@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,8 +19,9 @@ import com.bandi.service.TestService;
 
 import lombok.extern.slf4j.Slf4j;
 
+@WebServlet(urlPatterns = "/annotatedAsync", asyncSupported = true)
 @Slf4j
-public class AsyncRequestDispatcherServlet extends HttpServlet {
+public class AnnotatedAsyncServlet extends HttpServlet {
 
 	@Inject
 	private TestService testService;
@@ -43,14 +45,16 @@ public class AsyncRequestDispatcherServlet extends HttpServlet {
 
 		aCtx.start(() -> {
 			try {
-				testService.writeResponse(aCtx);
-			} catch (IOException e) {
+				Thread.sleep(100);
+				aCtx.getResponse().getWriter().println("Annotated Async Servlet called");
+				aCtx.complete();
+			} catch (IOException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		});
 
-		log.debug("async context completed");
+		log.debug("annotated async context completed");
 	}
 
 	@Override

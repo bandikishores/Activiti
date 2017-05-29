@@ -4,12 +4,14 @@ import java.io.IOException;
 
 import javax.servlet.AsyncEvent;
 import javax.servlet.AsyncListener;
+import javax.servlet.annotation.WebListener;
 
 import com.bandi.service.TestService;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@WebListener
 public class AsyncServletListener implements AsyncListener {
 
 	TestService testService;
@@ -20,7 +22,7 @@ public class AsyncServletListener implements AsyncListener {
 
 	public void onComplete(AsyncEvent event) throws IOException {
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -30,7 +32,7 @@ public class AsyncServletListener implements AsyncListener {
 
 	public void onTimeout(AsyncEvent event) throws IOException {
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -40,7 +42,7 @@ public class AsyncServletListener implements AsyncListener {
 
 	public void onError(AsyncEvent event) throws IOException {
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -50,7 +52,7 @@ public class AsyncServletListener implements AsyncListener {
 
 	public void onStartAsync(AsyncEvent event) throws IOException {
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -1,14 +1,22 @@
 package com.bandi;
 
+import org.eclipse.jetty.annotations.AnnotationConfiguration;
+import org.eclipse.jetty.plus.webapp.EnvConfiguration;
+import org.eclipse.jetty.plus.webapp.PlusConfiguration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.webapp.Configuration;
+import org.eclipse.jetty.webapp.FragmentConfiguration;
+import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
+import org.eclipse.jetty.webapp.MetaInfConfiguration;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.webapp.WebInfConfiguration;
+import org.eclipse.jetty.webapp.WebXmlConfiguration;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.bandi.servlet.AsyncRequestDispatcherServlet;
 import com.bandi.spring.SpringConfiguration;
@@ -17,11 +25,13 @@ import com.codahale.metrics.servlets.HealthCheckServlet;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.PingServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
+import com.google.common.io.Files;
 
 /**
  * End points available
  * 
- * 1) localhost:8283/async
+ * 1) http://localhost:8283/async 2) http://localhost:8283/annotatedAsync
+ * 
  * 
  * @author kishore.bandi
  *
@@ -34,10 +44,16 @@ public class ActivitiMain {
 		Server server = new Server(listenPort);
 		server.setStopAtShutdown(true);
 
-		ServletContextHandler context = new ServletContextHandler();
-		// context.setContextPath("/activiti"); // Set only if
+		// System.setProperty("org.eclipse.jetty.LEVEL=DEBUG", "true");
+
+		// ServletContextHandler context = new ServletContextHandler(); // Add
+		// only if you need just Servlet Context
+
+		// context.setContextPath("/activiti"); // Set only if you need a
+		// sub-path to be added for all the calls
 
 		// Add Health Check related Servlets
+		WebAppContext context = new WebAppContext();
 		context.addServlet(MetricsServlet.class, "/metrics");
 		context.addServlet(ThreadDumpServlet.class, "/threads");
 		ServletHolder pingServletHolder = new ServletHolder(PingServlet.class);
@@ -63,12 +79,20 @@ public class ActivitiMain {
 		context.setInitParameter("contextConfigLocation", SpringConfiguration.class.getName());
 		context.addEventListener(new ContextLoaderListener());
 
-		// Setup Spring context - with XMLs
-		/*
-		 * context.setInitParameter("contextConfigLocation",
-		 * "classpath*:META-INF/spring/activiti-application-context.xml");
-		 * 
-		 */
+		String jar = ActivitiMain.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+		System.out.println("path = " + jar);
+		context.setResourceBase("/");
+
+		// Setup Annotation driven Scanning of Web Services.
+		context.setConfigurations(new Configuration[] { new AnnotationConfiguration(), new WebInfConfiguration(),
+				new WebXmlConfiguration(), new MetaInfConfiguration(), new FragmentConfiguration(),
+				new EnvConfiguration(), new PlusConfiguration(), new JettyWebXmlConfiguration() });
+		context.setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern", ".*/classes/.*");
+		// Add this string to the end if you want to search in specific jars
+		// ".*/classes/.*|.*/foo-[^/]*\\.jar$"
+
+		context.setContextPath("/");
+		context.setParentLoaderPriority(true);
 
 		// Add handlers and contexts to server.
 		HandlerCollection handlers = new HandlerCollection();
