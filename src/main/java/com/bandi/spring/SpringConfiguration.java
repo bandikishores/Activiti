@@ -22,8 +22,8 @@ public class SpringConfiguration {
 	private AnnotationConfigApplicationContext annotationConfigApplicationContext;
 
 	public void initializeSpring() {
-		//annotationConfigApplicationContext = new AnnotationConfigApplicationContext("com.bandi");
-		//annotationConfigApplicationContext.start();
+		annotationConfigApplicationContext = new AnnotationConfigApplicationContext("com.bandi");
+		annotationConfigApplicationContext.start();
 	}
 
 	@Bean
@@ -34,7 +34,7 @@ public class SpringConfiguration {
 	@PreDestroy
 	public void stopSpring() {
 		log.debug("Stopping spring!!");
-		//annotationConfigApplicationContext.close();
+		annotationConfigApplicationContext.close();
 	}
 
 }

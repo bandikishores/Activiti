@@ -62,6 +62,7 @@ public class MetricsConfiguration extends MetricsConfigurerAdapter {
 	}
 
 	@Bean
+	@Primary
 	public HealthCheckRegistry healthCheckRegistry() {
 		return new HealthCheckRegistry();
 	}

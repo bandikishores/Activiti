@@ -18,8 +18,13 @@ import org.eclipse.jetty.webapp.WebXmlConfiguration;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
+import com.bandi.listener.MyHealthCheckServletContextListener;
+import com.bandi.listener.MyMetricsServletContextListener;
 import com.bandi.servlet.AsyncRequestDispatcherServlet;
+import com.bandi.spring.SpringApplicationContextAware;
 import com.bandi.spring.SpringConfiguration;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.servlets.AdminServlet;
 import com.codahale.metrics.servlets.HealthCheckServlet;
 import com.codahale.metrics.servlets.MetricsServlet;
@@ -30,8 +35,8 @@ import com.google.common.io.Files;
 /**
  * End points available
  * 
- * 1) http://localhost:8283/async 2) http://localhost:8283/annotatedAsync
- * 
+ * 1) http://localhost:8283/async 2) http://localhost:8283/annotatedAsync 3)
+ * http://localhost:8283/admin
  * 
  * @author kishore.bandi
  *
@@ -78,6 +83,15 @@ public class ActivitiMain {
 		context.setInitParameter("contextClass", AnnotationConfigWebApplicationContext.class.getName());
 		context.setInitParameter("contextConfigLocation", SpringConfiguration.class.getName());
 		context.addEventListener(new ContextLoaderListener());
+
+		context.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
+				SpringApplicationContextAware.getBean(HealthCheckRegistry.class));
+		context.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry",
+				SpringApplicationContextAware.getBean(MetricRegistry.class));
+		/*
+		 * context.addEventListener(new MyMetricsServletContextListener());
+		 * context.addEventListener(new MyHealthCheckServletContextListener());
+		 */
 
 		String jar = ActivitiMain.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
 		System.out.println("path = " + jar);
