@@ -65,10 +65,10 @@ public class ActivitiMain {
 		context.addServlet(pingServletHolder, "/ping");
 		context.addServlet(HealthCheckServlet.class, "/healthcheck");
 		ServletHolder adminServletHolder = context.addServlet(AdminServlet.class, "/admin");
-		adminServletHolder.setInitParameter(AdminServlet.PING_URI_PARAM_KEY, "/ping");
-		adminServletHolder.setInitParameter(AdminServlet.METRICS_URI_PARAM_KEY, "/metrics");
-		adminServletHolder.setInitParameter(AdminServlet.HEALTHCHECK_URI_PARAM_KEY, "/healthcheck");
-		adminServletHolder.setInitParameter(AdminServlet.THREADS_URI_PARAM_KEY, "/threads");
+		adminServletHolder.setInitParameter(AdminServlet.PING_URI_PARAM_KEY, "/../ping");
+		adminServletHolder.setInitParameter(AdminServlet.METRICS_URI_PARAM_KEY, "/../metrics");
+		adminServletHolder.setInitParameter(AdminServlet.HEALTHCHECK_URI_PARAM_KEY, "/../healthcheck");
+		adminServletHolder.setInitParameter(AdminServlet.THREADS_URI_PARAM_KEY, "/../threads");
 
 		// Bind Servlet
 		ServletHolder asyncRequestDispatcherServletHolder = context.addServlet(AsyncRequestDispatcherServlet.class,
