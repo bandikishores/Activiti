@@ -4,6 +4,8 @@ import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -12,8 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.web.context.support.ServletContextAttributeExporter;
 
-import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.graphite.Graphite;
@@ -81,8 +83,19 @@ public class MetricsConfiguration extends MetricsConfigurerAdapter {
 	@Override
 	public void configureReporters(MetricRegistry metricRegistry) {
 		GraphiteReporter graphiteReporter = getGraphiteReporterBuilder(metricRegistry).build(graphite);
-	//	registerReporter(JmxReporter.forRegistry(metricRegistry).build()).start();
+		// registerReporter(JmxReporter.forRegistry(metricRegistry).build()).start();
 		registerReporter(graphiteReporter).start(interval, TimeUnit.SECONDS);
+	}
+
+	@Bean
+	public ServletContextAttributeExporter servletContextAttributeExporter(MetricRegistry metricRegistry,
+			HealthCheckRegistry healthCheckRegistry) {
+		Map<String, Object> attributes = new HashMap<>();
+		attributes.put("com.codahale.metrics.servlets.HealthCheckServlet.registry", healthCheckRegistry);
+		attributes.put("com.codahale.metrics.servlets.MetricsServlet.registry", metricRegistry);
+		ServletContextAttributeExporter servletContextAttributeExporter = new ServletContextAttributeExporter();
+		servletContextAttributeExporter.setAttributes(attributes);
+		return servletContextAttributeExporter;
 	}
 
 	private Builder getGraphiteReporterBuilder(MetricRegistry metricRegistry) {

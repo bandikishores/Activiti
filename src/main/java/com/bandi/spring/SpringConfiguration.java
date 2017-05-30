@@ -12,6 +12,7 @@ import org.springframework.core.annotation.Order;
 
 import lombok.extern.slf4j.Slf4j;
 
+
 @Configuration
 @PropertySource("classpath:activiti.properties")
 @ComponentScan(basePackages = "com.bandi")

@@ -7,6 +7,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.Configuration;
 import org.eclipse.jetty.webapp.FragmentConfiguration;
@@ -15,11 +16,12 @@ import org.eclipse.jetty.webapp.MetaInfConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebInfConfiguration;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
+import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 
-import com.bandi.listener.MyHealthCheckServletContextListener;
-import com.bandi.listener.MyMetricsServletContextListener;
+import com.bandi.jersey.JerseyResource;
 import com.bandi.servlet.AsyncRequestDispatcherServlet;
 import com.bandi.spring.SpringApplicationContextAware;
 import com.bandi.spring.SpringConfiguration;
@@ -30,17 +32,21 @@ import com.codahale.metrics.servlets.HealthCheckServlet;
 import com.codahale.metrics.servlets.MetricsServlet;
 import com.codahale.metrics.servlets.PingServlet;
 import com.codahale.metrics.servlets.ThreadDumpServlet;
-import com.google.common.io.Files;
 
+//@formatter:off
 /**
  * End points available
  * 
- * 1) http://localhost:8283/async 2) http://localhost:8283/annotatedAsync 3)
- * http://localhost:8283/admin
+ * 1) http://localhost:8283/async 
+ * 2) http://localhost:8283/annotatedAsync 
+ * 3) http://localhost:8283/admin 
+ * 4) http://localhost:8283/jersey 
+ * 5) http://localhost:8283/inner
  * 
  * @author kishore.bandi
  *
  */
+//@formatter:on
 public class ActivitiMain {
 
 	public static void main(String[] args) throws Exception {
@@ -49,7 +55,7 @@ public class ActivitiMain {
 		Server server = new Server(listenPort);
 		server.setStopAtShutdown(true);
 
-		// System.setProperty("org.eclipse.jetty.LEVEL=DEBUG", "true");
+		System.setProperty("org.eclipse.jetty.LEVEL=DEBUG", "true");
 
 		// ServletContextHandler context = new ServletContextHandler(); // Add
 		// only if you need just Servlet Context
@@ -76,18 +82,18 @@ public class ActivitiMain {
 		asyncRequestDispatcherServletHolder.setAsyncSupported(true);
 		// Setting the Init Order as initialize during start up is needed for
 		// stopping first request from being dropped.
-		asyncRequestDispatcherServletHolder.setInitOrder(1);
+		asyncRequestDispatcherServletHolder.setInitOrder(10);
 
 		// Setup Spring with Annotation.
-		new SpringConfiguration().initializeSpring();
+		// new SpringConfiguration().initializeSpring();
 		context.setInitParameter("contextClass", AnnotationConfigWebApplicationContext.class.getName());
 		context.setInitParameter("contextConfigLocation", SpringConfiguration.class.getName());
 		context.addEventListener(new ContextLoaderListener());
 
-		context.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
+		/*context.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
 				SpringApplicationContextAware.getBean(HealthCheckRegistry.class));
 		context.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry",
-				SpringApplicationContextAware.getBean(MetricRegistry.class));
+				SpringApplicationContextAware.getBean(MetricRegistry.class));*/
 		/*
 		 * context.addEventListener(new MyMetricsServletContextListener());
 		 * context.addEventListener(new MyHealthCheckServletContextListener());
@@ -107,6 +113,23 @@ public class ActivitiMain {
 
 		context.setContextPath("/");
 		context.setParentLoaderPriority(true);
+
+		// Jersey Configuration
+		ResourceConfig config = new ResourceConfig();
+		config.packages("com.inmobi.jersey");
+		ServletHolder servlet = new ServletHolder(new ServletContainer(config));
+		servlet.setInitOrder(1);
+		context.addServlet(servlet, "/*");
+		/*
+		 * ServletHolder jerseyServlet =
+		 * context.addServlet(org.glassfish.jersey.servlet.ServletContainer.
+		 * class, "/rest/*"); jerseyServlet.setInitOrder(0);
+		 * jerseyServlet.setInitParameter(
+		 * "jersey.config.server.provider.classnames",
+		 * "org.glassfish.jersey.media.multipart.MultiPartFeature;org.glassfish.jersey.server.mvc.jsp.JspMvcFeature;org.glassfish.jersey.filter.LoggingFilter"
+		 * ); jerseyServlet.setInitParameter(
+		 * "jersey.config.server.provider.packages", "com.inmobi");
+		 */
 
 		// Add handlers and contexts to server.
 		HandlerCollection handlers = new HandlerCollection();
