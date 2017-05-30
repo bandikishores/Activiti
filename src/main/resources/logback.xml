@@ -74,6 +74,25 @@
 		</encoder>
 	</appender>
 
+	<appender name="OTHER_LOG"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- daily rollover -->
+			<fileNamePattern>${LOG_DIR}/other.%d{yyyy-MM-dd}.log.gz
+			</fileNamePattern>
+			<totalSizeCap>5GB</totalSizeCap>
+			<maxHistory>${MAX_HISTORY}</maxHistory>
+		</rollingPolicy>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>ERROR</level>
+		</filter>
+		<encoder>
+			<Pattern>%d{HH:mm:ss.SSS} [%thread] [%X{customId}] %-5level
+				%logger{50} - %msg%n
+			</Pattern>
+		</encoder>
+	</appender>
+
 	<logger name="org.eclipse.jetty" level="DEBUG">
 		<appender-ref ref="JETTY_LOG" />
 	</logger>
@@ -83,12 +102,13 @@
 		<appender-ref ref="ERROR_LOG" />
 	</logger>
 
-	<logger name="RequestResponseLog" level="DEBUG" additivity="false">
+	<logger name="com.bandi.jersey.configuration.RequestResponseLogger"
+		level="DEBUG" additivity="false">
 		<appender-ref ref="REQUEST_LOG" />
 	</logger>
 
-	<root level="DEBUG">
-		<appender-ref ref="ERROR_LOG" />
+	<root level="ALL">
+		<appender-ref ref="OTHER_LOG" />
 	</root>
 
 
