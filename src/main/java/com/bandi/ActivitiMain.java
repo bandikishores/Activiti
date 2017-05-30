@@ -17,6 +17,7 @@ import org.eclipse.jetty.webapp.WebAppContext;
 import org.eclipse.jetty.webapp.WebInfConfiguration;
 import org.eclipse.jetty.webapp.WebXmlConfiguration;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -63,46 +64,9 @@ public class ActivitiMain {
 		// context.setContextPath("/activiti"); // Set only if you need a
 		// sub-path to be added for all the calls
 
-		// Add Health Check related Servlets
 		WebAppContext context = new WebAppContext();
-		context.addServlet(MetricsServlet.class, "/metrics");
-		context.addServlet(ThreadDumpServlet.class, "/threads");
-		ServletHolder pingServletHolder = new ServletHolder(PingServlet.class);
-		context.addServlet(pingServletHolder, "/ping");
-		context.addServlet(HealthCheckServlet.class, "/healthcheck");
-		ServletHolder adminServletHolder = context.addServlet(AdminServlet.class, "/admin");
-		adminServletHolder.setInitParameter(AdminServlet.PING_URI_PARAM_KEY, "/../ping");
-		adminServletHolder.setInitParameter(AdminServlet.METRICS_URI_PARAM_KEY, "/../metrics");
-		adminServletHolder.setInitParameter(AdminServlet.HEALTHCHECK_URI_PARAM_KEY, "/../healthcheck");
-		adminServletHolder.setInitParameter(AdminServlet.THREADS_URI_PARAM_KEY, "/../threads");
 
-		// Bind Servlet
-		ServletHolder asyncRequestDispatcherServletHolder = context.addServlet(AsyncRequestDispatcherServlet.class,
-				"/async/*");
-		asyncRequestDispatcherServletHolder.setAsyncSupported(true);
-		// Setting the Init Order as initialize during start up is needed for
-		// stopping first request from being dropped.
-		asyncRequestDispatcherServletHolder.setInitOrder(10);
-
-		// Setup Spring with Annotation.
-		// new SpringConfiguration().initializeSpring();
-		context.setInitParameter("contextClass", AnnotationConfigWebApplicationContext.class.getName());
-		context.setInitParameter("contextConfigLocation", SpringConfiguration.class.getName());
-		context.addEventListener(new ContextLoaderListener());
-
-		/*context.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
-				SpringApplicationContextAware.getBean(HealthCheckRegistry.class));
-		context.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry",
-				SpringApplicationContextAware.getBean(MetricRegistry.class));*/
-		/*
-		 * context.addEventListener(new MyMetricsServletContextListener());
-		 * context.addEventListener(new MyHealthCheckServletContextListener());
-		 */
-
-		String jar = ActivitiMain.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
-		System.out.println("path = " + jar);
 		context.setResourceBase("/");
-
 		// Setup Annotation driven Scanning of Web Services.
 		context.setConfigurations(new Configuration[] { new AnnotationConfiguration(), new WebInfConfiguration(),
 				new WebXmlConfiguration(), new MetaInfConfiguration(), new FragmentConfiguration(),
@@ -114,22 +78,10 @@ public class ActivitiMain {
 		context.setContextPath("/");
 		context.setParentLoaderPriority(true);
 
-		// Jersey Configuration
-		ResourceConfig config = new ResourceConfig();
-		config.packages("com.inmobi.jersey");
-		ServletHolder servlet = new ServletHolder(new ServletContainer(config));
-		servlet.setInitOrder(1);
-		context.addServlet(servlet, "/*");
-		/*
-		 * ServletHolder jerseyServlet =
-		 * context.addServlet(org.glassfish.jersey.servlet.ServletContainer.
-		 * class, "/rest/*"); jerseyServlet.setInitOrder(0);
-		 * jerseyServlet.setInitParameter(
-		 * "jersey.config.server.provider.classnames",
-		 * "org.glassfish.jersey.media.multipart.MultiPartFeature;org.glassfish.jersey.server.mvc.jsp.JspMvcFeature;org.glassfish.jersey.filter.LoggingFilter"
-		 * ); jerseyServlet.setInitParameter(
-		 * "jersey.config.server.provider.packages", "com.inmobi");
-		 */
+		injectSpringDependency(context);
+		declareServlets(context);
+		injectMetricDependency(context);
+		injectJerseyDependency(context);
 
 		// Add handlers and contexts to server.
 		HandlerCollection handlers = new HandlerCollection();
@@ -138,6 +90,62 @@ public class ActivitiMain {
 
 		server.start();
 		server.join();
+	}
+
+	private static void declareServlets(WebAppContext context) {
+		// Bind Servlet
+		ServletHolder asyncRequestDispatcherServletHolder = context.addServlet(AsyncRequestDispatcherServlet.class,
+				"/async/*");
+		asyncRequestDispatcherServletHolder.setAsyncSupported(true);
+		// Setting the Init Order as initialize during start up is needed for
+		// stopping first request from being dropped.
+		asyncRequestDispatcherServletHolder.setInitOrder(10);
+	}
+
+	private static void injectMetricDependency(WebAppContext context) {
+		context.addServlet(MetricsServlet.class, "/metrics");
+		context.addServlet(ThreadDumpServlet.class, "/threads");
+		ServletHolder pingServletHolder = new ServletHolder(PingServlet.class);
+		context.addServlet(pingServletHolder, "/ping");
+		context.addServlet(HealthCheckServlet.class, "/healthcheck");
+		ServletHolder adminServletHolder = context.addServlet(AdminServlet.class, "/admin");
+		adminServletHolder.setInitParameter(AdminServlet.PING_URI_PARAM_KEY, "/../ping");
+		adminServletHolder.setInitParameter(AdminServlet.METRICS_URI_PARAM_KEY, "/../metrics");
+		adminServletHolder.setInitParameter(AdminServlet.HEALTHCHECK_URI_PARAM_KEY, "/../healthcheck");
+		adminServletHolder.setInitParameter(AdminServlet.THREADS_URI_PARAM_KEY, "/../threads");
+	}
+
+	private static void injectJerseyDependency(WebAppContext context) {
+		// Jersey Configuration
+		ResourceConfig config = new ResourceConfig();
+		config.packages("com.bandi.jersey", "com.bandi.jersey.configuration");
+		config.registerClasses(org.glassfish.jersey.media.multipart.MultiPartFeature.class);
+		// config.registerClasses(org.glassfish.jersey.server.mvc.jsp.JspMvcFeature);
+		config.registerClasses(org.glassfish.jersey.filter.LoggingFilter.class);
+		ServletHolder servlet = new ServletHolder(new ServletContainer(config));
+		servlet.setInitOrder(1);
+		context.addServlet(servlet, "/*");
+	}
+
+	private static void injectSpringDependency(WebAppContext context) {
+		// Setup Spring with Annotation.
+		// new SpringConfiguration().initializeSpring();
+		context.setInitParameter("contextClass", AnnotationConfigWebApplicationContext.class.getName());
+		context.setInitParameter("contextConfigLocation", SpringConfiguration.class.getName());
+		context.addEventListener(new ContextLoaderListener());
+
+		/*
+		 * context.setAttribute(
+		 * "com.codahale.metrics.servlets.HealthCheckServlet.registry",
+		 * SpringApplicationContextAware.getBean(HealthCheckRegistry.class));
+		 * context.setAttribute(
+		 * "com.codahale.metrics.servlets.MetricsServlet.registry",
+		 * SpringApplicationContextAware.getBean(MetricRegistry.class));
+		 */
+		/*
+		 * context.addEventListener(new MyMetricsServletContextListener());
+		 * context.addEventListener(new MyHealthCheckServletContextListener());
+		 */
 	}
 
 }

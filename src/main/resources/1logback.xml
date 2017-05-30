@@ -87,7 +87,7 @@
 		<appender-ref ref="REQUEST_LOG" />
 	</logger>
 
-	<root level="ERROR">
+	<root level="DEBUG">
 		<appender-ref ref="ERROR_LOG" />
 	</root>
 

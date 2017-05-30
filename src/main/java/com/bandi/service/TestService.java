@@ -38,4 +38,8 @@ public class TestService {
 		aCtx.getResponse().getWriter().println("value from Service");
 		aCtx.complete();
 	}
+
+	public String getJersey() {
+		return "Jersey";
+	}
 }

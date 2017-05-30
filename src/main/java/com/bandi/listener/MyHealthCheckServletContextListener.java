@@ -8,7 +8,7 @@ import com.codahale.metrics.servlets.HealthCheckServlet;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-@WebListener
+/*@WebListener*/
 public class MyHealthCheckServletContextListener extends HealthCheckServlet.ContextListener {
 
 	public final HealthCheckRegistry HEALTH_CHECK_REGISTRY;
