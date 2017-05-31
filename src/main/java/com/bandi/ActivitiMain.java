@@ -41,8 +41,10 @@ import com.codahale.metrics.servlets.ThreadDumpServlet;
  * 1) http://localhost:8283/async 
  * 2) http://localhost:8283/annotatedAsync 
  * 3) http://localhost:8283/admin 
- * 4) http://localhost:8283/jersey 
- * 5) http://localhost:8283/inner
+ * 4) http://localhost:8283/rest/jersey 
+ * 5) http://localhost:8283/rest/inner
+ * 6) ws://localhost:8283/echoWebSocket
+ * 
  * 
  * @author kishore.bandi
  *
@@ -124,7 +126,7 @@ public class ActivitiMain {
 		config.registerClasses(org.glassfish.jersey.filter.LoggingFilter.class);
 		ServletHolder servlet = new ServletHolder(new ServletContainer(config));
 		servlet.setInitOrder(1);
-		context.addServlet(servlet, "/*");
+		context.addServlet(servlet, "/rest/*");
 	}
 
 	private static void injectSpringDependency(WebAppContext context) {
