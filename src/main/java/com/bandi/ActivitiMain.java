@@ -42,8 +42,9 @@ import com.codahale.metrics.servlets.ThreadDumpServlet;
  * 2) http://localhost:8283/annotatedAsync 
  * 3) http://localhost:8283/admin 
  * 4) http://localhost:8283/rest/jersey 
- * 5) http://localhost:8283/rest/inner
+ * 5) http://localhost:8283/rest/jersey/inner
  * 6) ws://localhost:8283/echoWebSocket
+ * 7) http://localhost:8283/rest/jersey/async
  * 
  * 
  * @author kishore.bandi
@@ -58,7 +59,8 @@ public class ActivitiMain {
 		Server server = new Server(listenPort);
 		server.setStopAtShutdown(true);
 
-		System.setProperty("org.eclipse.jetty.LEVEL=DEBUG", "true");
+		System.setProperty("org.eclipse.jetty.util.log.class", "org.eclipse.jetty.util.log.StdErrLog ");
+		System.setProperty("org.eclipse.jetty.LEVEL", "DEBUG");
 
 		// ServletContextHandler context = new ServletContextHandler(); // Add
 		// only if you need just Servlet Context
