@@ -1,10 +1,13 @@
 package com.bandi;
 
+import java.util.Arrays;
+
 import org.eclipse.jetty.annotations.AnnotationConfiguration;
 import org.eclipse.jetty.plus.webapp.EnvConfiguration;
 import org.eclipse.jetty.plus.webapp.PlusConfiguration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -81,6 +84,9 @@ public class ActivitiMain {
 
 		context.setContextPath("/");
 		context.setParentLoaderPriority(true);
+		/*context.getSessionHandler().getSessionIdManager().getSessionHandlers().forEach(h -> {
+			h.setMaxInactiveInterval(1000000);
+		});*/
 
 		injectSpringDependency(context);
 		declareServlets(context);
@@ -91,8 +97,21 @@ public class ActivitiMain {
 		HandlerCollection handlers = new HandlerCollection();
 		handlers.setHandlers(new Handler[] { context, new DefaultHandler() });
 		server.setHandler(handlers);
+		Arrays.stream(server.getConnectors()).forEach(c->{
+			if(c instanceof ServerConnector) {
+				((ServerConnector)c).setIdleTimeout(3000000);
+			}
+		});
 
 		server.start();
+		Arrays.stream(server.getConnectors()).forEach(c->{
+			if(c instanceof ServerConnector) {
+				((ServerConnector)c).setIdleTimeout(3000000);
+			}
+		});
+		context.getSessionHandler().getSessionIdManager().getSessionHandlers().forEach(h -> {
+			h.setMaxInactiveInterval(1000000);
+		});
 		server.join();
 	}
 
